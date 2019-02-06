@@ -6,7 +6,7 @@
 #    By: cbreisch <cbreisch@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/02/27 14:18:33 by cbreisch          #+#    #+#              #
-#    Updated: 2019/02/07 00:18:53 by cbreisch         ###   ########.fr        #
+#    Updated: 2019/02/07 00:36:41 by cbreisch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -51,17 +51,18 @@ LIN_STRING	:= "Linking"
 IND_STRING	:= "Indexing"
 DEL_STRING	:= "Deleted"
 
-$(NAME): $(TARGET)
 
-all: makedep directories $(TARGET) #Create dirs and build target
 
-re: fclean all #Fullclean + build
+
+
+#
+#	RULES
+#
+all: makedep $(TARGETDIR)/$(TARGET)
+
+re: fclean all
 
 fre: depclean fclean all
-
-directories: #Create directories
-	@$(MKDIR) $(TARGETDIR)
-	@$(MKDIR) $(BUILDDIR)
 
 clean: #Delete build directory
 	@$(RM) $(OBJECTS) $(BUILDDIR) 2> /dev/null | true
@@ -86,8 +87,16 @@ normcheck:
 makedep:
 	@$(foreach dep,$(MAKEDEP),make -C $(dep);)
 
+
+
+
+
+#
+#	LINKING
+#
 ifeq ($(LIBRARY), FALSE)
-$(TARGET): $(OBJECTS) #Build objects, then target
+$(TARGETDIR)/$(TARGET): $(OBJECTS)
+	@$(MKDIR) $(dir $@)
 	@$(CC) $(CFLAGS) $(INC) -o $(TARGETDIR)/$(TARGET) $^ $(LIB) 2> $@.log; \
 		RESULT=$$?; \
 		if [ $$RESULT -ne 0 ]; then \
@@ -101,7 +110,8 @@ $(TARGET): $(OBJECTS) #Build objects, then target
 		rm -f $@.log; \
 		exit $$RESULT
 else
-$(TARGET): $(OBJECTS) #Build objects, then link target
+$(TARGETDIR)/$(TARGET): $(OBJECTS)
+	@$(MKDIR) $(dir $@)
 	@$(LINKER) $(TARGETDIR)/$(TARGET) $^ 2> $@.log; \
 		RESULT=$$?; \
 		if [ $$RESULT -ne 0 ]; then \
@@ -116,9 +126,15 @@ $(TARGET): $(OBJECTS) #Build objects, then link target
 		exit $$RESULT
 endif
 
-#Compile objects
+
+
+
+
+#
+#	OBJECTS BUILDING
+#
 $(BUILDDIR)/%.$(OBJEXT): $(SRCDIR)/%.$(SRCEXT)
-	@$(MKDIR) -p $(dir $@)
+	@$(MKDIR) $(dir $@)
 	@$(CC) $(CFLAGS) $(INC) -c -o $@ $< 2> $@.log; \
 		RESULT=$$?; \
 		if [ $$RESULT -ne 0 ]; then \
@@ -131,6 +147,10 @@ $(BUILDDIR)/%.$(OBJEXT): $(SRCDIR)/%.$(SRCEXT)
 		cat $@.log; \
 		rm -f $@.log; \
 		exit $$RESULT
+	
+
+
+
 
 nicemoulinette:
 	@(read -p "Are you sure ? [y/N]: " sure && case "$$sure" in [yY]) true;; *) false;; esac)
@@ -141,3 +161,4 @@ nicemoulinette:
 
 #Non-File Targets
 .PHONY: all re fre directories clean fclean depclean depfclean norm normcheck makedep nicemoulinette
+
