@@ -14,6 +14,7 @@ with open(selfdir + example, 'r') as makefile_file:
 	with open(sys.argv[1]) as generator_file:
 		generator = load(generator_file)
 		makefile = makefile \
+			.replace("{name}",		generator.get("name",	generator.get("target",	"UNDEFINED"))) \
 			.replace("{target}",	generator.get("target",	"UNDEFINED")) \
 			.replace("{library}",	"TRUE" if generator.get("library","FALSE") else "FALSE") \
 			.replace("{srcdir}",	generator.get("srcdir",	"srcs")) \

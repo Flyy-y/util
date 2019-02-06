@@ -6,10 +6,11 @@
 #    By: cbreisch <cbreisch@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/02/27 14:18:33 by cbreisch          #+#    #+#              #
-#    Updated: 2019/02/06 22:52:42 by cbreisch         ###   ########.fr        #
+#    Updated: 2019/02/07 00:00:41 by cbreisch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
+NAME		:= {name}
 TARGET		:= {target}
 LIBRARY		:= {library}
 
@@ -49,6 +50,8 @@ COM_STRING	:= "Compiling"
 LIN_STRING	:= "Linking"
 IND_STRING	:= "Indexing"
 DEL_STRING	:= "Deleted"
+
+$(NAME): all
 
 all: makedep directories $(TARGET) #Create dirs and build target
 
