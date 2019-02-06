@@ -9,10 +9,6 @@ selfdir = path.dirname(path.realpath(__file__))
 example = "/../Makefile"
 git = check_output(["git", "pull"], cwd=selfdir)
 
-if "Already up-to-date." not in git.decode("utf-8"):
-	print("Updated. Please restart the script", file=sys.stderr)
-	exit(0)
-
 with open(selfdir + example, 'r') as makefile_file:
 	makefile = makefile_file.read()
 	with open(sys.argv[1]) as generator_file:
