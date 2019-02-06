@@ -6,7 +6,7 @@
 #    By: cbreisch <cbreisch@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/02/27 14:18:33 by cbreisch          #+#    #+#              #
-#    Updated: 2019/02/07 00:06:00 by cbreisch         ###   ########.fr        #
+#    Updated: 2019/02/07 00:18:53 by cbreisch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -42,7 +42,7 @@ ERROR_COLOR	:= \033[0;31m
 WARN_COLOR	:= \033[0;33m
 NO_COLOR	:= \033[m
 
-FORM_STRING := %-20b%-55b%b
+PRINTF 		:= printf "%-20b%-55b%b"
 OK_STRING	:= "[OK]"
 ERROR_STRING:= "[ERROR]"
 WARN_STRING	:= "[WARNING]"
@@ -51,26 +51,31 @@ LIN_STRING	:= "Linking"
 IND_STRING	:= "Indexing"
 DEL_STRING	:= "Deleted"
 
-all: makedep directories $(NAME) #Create dirs and build target
+$(NAME): $(TARGET)
+
+all: makedep directories $(TARGET) #Create dirs and build target
 
 re: fclean all #Fullclean + build
 
 fre: depclean fclean all
 
 directories: #Create directories
-	@$(MKDIR) -p $(TARGETDIR)
-	@$(MKDIR) -p $(BUILDDIR)
+	@$(MKDIR) $(TARGETDIR)
+	@$(MKDIR) $(BUILDDIR)
 
 clean: #Delete build directory
-	@$(RM) $(OBJECTS) $(BUILDDIR) 2> /dev/null
-	@printf "$(FORM_STRING)" "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(DEL_STRING)$(TAR_COLOR) build files" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n";
+	@$(RM) $(OBJECTS) $(BUILDDIR) 2> /dev/null | true
+	@$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(DEL_STRING)$(TAR_COLOR) build files" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n";
 
 fclean: clean #Delete build and target directories
-	@$(RM) $(TARGETDIR)/$(TARGET) $(TARGETDIR)/$(TARGET).dSYM $(TARGETDIR)
-	@printf "$(FORM_STRING)" "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(DEL_STRING)$(TAR_COLOR) binary files" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n";
+	@$(RM) $(TARGETDIR)/$(TARGET) $(TARGETDIR)/$(TARGET).dSYM $(TARGETDIR) 2> /dev/null | true
+	@$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(DEL_STRING)$(TAR_COLOR) binary files" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n";
 
 depclean:
-	@$(foreach dep,$(MAKEDEP),make -C $(dep) fclean;)
+	@$(foreach dep,$(MAKEDEP),make -C $(dep) clean;)
+
+depfclean:
+	@$(foreach dep,$(MAKEDEP),make -C $(dep) clean;)
 
 norm:
 	@norminette $(SOURCES)
@@ -82,29 +87,29 @@ makedep:
 	@$(foreach dep,$(MAKEDEP),make -C $(dep);)
 
 ifeq ($(LIBRARY), FALSE)
-$(NAME): $(OBJECTS) #Build objects, then target
+$(TARGET): $(OBJECTS) #Build objects, then target
 	@$(CC) $(CFLAGS) $(INC) -o $(TARGETDIR)/$(TARGET) $^ $(LIB) 2> $@.log; \
 		RESULT=$$?; \
 		if [ $$RESULT -ne 0 ]; then \
-			printf "$(FORM_STRING)" "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
 		elif [ -s $@.log ]; then \
-			printf "$(FORM_STRING)" "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
 		else  \
-			printf "$(FORM_STRING)" "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
 		fi; \
 		cat $@.log; \
 		rm -f $@.log; \
 		exit $$RESULT
 else
-$(NAME): $(OBJECTS) #Build objects, then link target
+$(TARGET): $(OBJECTS) #Build objects, then link target
 	@$(LINKER) $(TARGETDIR)/$(TARGET) $^ 2> $@.log; \
 		RESULT=$$?; \
 		if [ $$RESULT -ne 0 ]; then \
-			printf "$(FORM_STRING)" "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
 		elif [ -s $@.log ]; then \
-			printf "$(FORM_STRING)" "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
 		else  \
-			printf "$(FORM_STRING)" "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
 		fi; \
 		cat $@.log; \
 		rm -f $@.log; \
@@ -117,11 +122,11 @@ $(BUILDDIR)/%.$(OBJEXT): $(SRCDIR)/%.$(SRCEXT)
 	@$(CC) $(CFLAGS) $(INC) -c -o $@ $< 2> $@.log; \
 		RESULT=$$?; \
 		if [ $$RESULT -ne 0 ]; then \
-			printf "$(FORM_STRING)" "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
 		elif [ -s $@.log ]; then \
-			printf "$(FORM_STRING)" "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
 		else  \
-			printf "$(FORM_STRING)" "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $(@F)" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $(@F)" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
 		fi; \
 		cat $@.log; \
 		rm -f $@.log; \
@@ -131,8 +136,8 @@ nicemoulinette:
 	@(read -p "Are you sure ? [y/N]: " sure && case "$$sure" in [yY]) true;; *) false;; esac)
 	@mv $(SOURCES) .
 	@mv $(shell du -a $(INCDIR) | awk '{print $$2}' | grep '\.h') .
-	@$(RM) $(SRCDIR)
-	@$(RM) $(INCDIR)
+	@$(RM) $(SRCDIR) | true
+	@$(RM) $(INCDIR) | true
 
 #Non-File Targets
-.PHONY: all re clean fclean directories norm normcheck makedep nicemoulinette fre depclean
+.PHONY: all re fre directories clean fclean depclean depfclean norm normcheck makedep nicemoulinette
