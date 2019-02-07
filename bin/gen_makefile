@@ -17,7 +17,7 @@ with open(selfdir + example, 'r') as makefile_file:
 			.replace("{name}",		generator.get("name",	generator.get("target",	"UNDEFINED"))) \
 			.replace("{target}",	generator.get("target",	"UNDEFINED")) \
 			.replace("{library}",	"TRUE" if generator.get("library","FALSE") else "FALSE") \
-			.replace("{srcdir}",	generator.get("srcdir",	"srcs")) \
+			.replace("{srcdir}",	generator.get("srcdir",	"src")) \
 			.replace("{incdir}",	generator.get("incdir",	"includes")) \
 			.replace("{builddir}",	generator.get("builddir", "build")) \
 			.replace("{tardir}",	generator.get("tardir",	"bin")) \
