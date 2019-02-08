@@ -1,36 +1,37 @@
 #!/usr/bin/python3
 
 from subprocess import check_output
-from os import path
-from os import environ
+import os
 from json import load
 import sys
 
-selfdir = path.dirname(path.realpath(__file__))
+selfdir = os.path.dirname(os.path.realpath(__file__))
 example = "/../Makefile"
 git = check_output(["git", "pull"], cwd=selfdir)
 
 with open(selfdir + example, 'r') as makefile_file:
+	
 	makefile = makefile_file.read()
 	with open(sys.argv[1]) as generator_file:
 		generator = load(generator_file)
 		makefile = makefile \
 			.replace("{name}",		generator.get("name",	generator.get("target",	"UNDEFINED"))) \
-			.replace("{target}",	generator.get("target",	"UNDEFINED")) \
+			.replace("{target}",	generator.get("target",	os.environ.get("TARGET", "UNDEFINED"))) \
 			.replace("{library}",	"TRUE" if generator.get("library","FALSE") else "FALSE") \
-			.replace("{srcdir}",	generator.get("srcdir",	"src")) \
-			.replace("{incdir}",	generator.get("incdir",	"includes")) \
-			.replace("{builddir}",	generator.get("builddir", "build")) \
-			.replace("{tardir}",	generator.get("tardir",	"bin")) \
+			.replace("{srcdir}",	generator.get("srcdir",	os.environ.get("SRCDIR", "src"))) \
+			.replace("{incdir}",	generator.get("incdir",	os.environ.get("INCDIR", "includes"))) \
+			.replace("{builddir}",	generator.get("builddir", os.environ.get("BUILDDIR", "build"))) \
+			.replace("{tardir}",	generator.get("tardir",	os.environ.get("TARDIR", "bin"))) \
 			.replace("{srcext}",	generator.get("srcext",	"c")) \
 			.replace("{objext}",	generator.get("objext",	"o")) \
-			.replace("{cc}",		generator.get("cc",		environ.get("CC", "gcc"))) \
-			.replace("{cflags}",	generator.get("cflags",	"-Wextra -Wall")) \
+			.replace("{cc}",		generator.get("cc",		os.environ.get("CC", "gcc"))) \
+			.replace("{cflags}",	generator.get("cflags",	os.environ.get("CC", "-Wextra -Wall"))) \
 			.replace("{makedep}",	generator.get("makedep","")) \
 			.replace("{lib}",		generator.get("lib",	"")) \
 			.replace("{inc}",		generator.get("inc",	"")) \
 			.replace("{linker}",	generator.get("linker",	"ar -rcs")) \
 			.replace("{rm}",		generator.get("rm",		"rm -rf")) \
 			.replace("{mkdir}",		generator.get("mkdir","mkdir -p"))
+		makefile = makefile.replace("{sources}", " \\\n".join([os.path.join(dp, f) for dp, dn, filenames in os.walk(generator.get("srcdir",	os.environ.get("SRCDIR", "src"))) for f in filenames if os.path.splitext(f)[1] == "." + generator.get("srcext", "c")]))
 		print(makefile)
 		print("Done !", file=sys.stderr)
