@@ -6,7 +6,7 @@
 #    By: cbreisch <cbreisch@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/02/27 14:18:33 by cbreisch          #+#    #+#              #
-#    Updated: 2019/02/08 13:57:45 by cbreisch         ###   ########.fr        #
+#    Updated: 2019/02/08 14:02:50 by cbreisch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,6 +31,7 @@ RM			:= {rm}
 MKDIR		:= {mkdir}
 
 SOURCES     := {sources}
+
 OBJECTS     := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.$(OBJEXT)))
 
 CUR_COLOR	:= \033[0;93m
