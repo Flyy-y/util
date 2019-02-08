@@ -6,7 +6,7 @@
 #    By: cbreisch <cbreisch@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/02/27 14:18:33 by cbreisch          #+#    #+#              #
-#    Updated: 2019/02/08 14:02:50 by cbreisch         ###   ########.fr        #
+#    Updated: 2019/02/08 14:18:46 by cbreisch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -59,6 +59,8 @@ DEL_STRING	:= "Deleted"
 #
 #	RULES
 #
+$(NAME): all
+
 all: makedep $(TARGETDIR)/$(TARGET)
 
 re: fclean all
