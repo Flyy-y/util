@@ -6,7 +6,7 @@
 #    By: cbreisch <cbreisch@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/02/27 14:18:33 by cbreisch          #+#    #+#              #
-#    Updated: 2019/02/08 14:18:46 by cbreisch         ###   ########.fr        #
+#    Updated: 2019/02/08 17:40:30 by cbreisch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -82,10 +82,10 @@ depfclean:
 	@$(foreach dep,$(MAKEDEP),make -C $(dep) clean;)
 
 norm:
-	@norminette $(SOURCES)
+	@norminette $(SOURCES) $(INCDIR)/*.h
 
 normcheck:
-	@echo "$(shell norminette $(SOURCES) | grep -E '^(Error|Warning)')" Norme check OK
+	@echo "$(shell norminette $(SOURCES) $(INCDIR)/*.h | grep -E '^(Error|Warning)')" Norme check OK
 
 makedep:
 	@$(foreach dep,$(MAKEDEP),make -C $(dep);)
