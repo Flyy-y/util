@@ -2,6 +2,7 @@
 
 from subprocess import check_output
 from os import path
+from os import environ
 from json import load
 import sys
 
@@ -23,7 +24,7 @@ with open(selfdir + example, 'r') as makefile_file:
 			.replace("{tardir}",	generator.get("tardir",	"bin")) \
 			.replace("{srcext}",	generator.get("srcext",	"c")) \
 			.replace("{objext}",	generator.get("objext",	"o")) \
-			.replace("{cc}",		generator.get("cc",		"clang")) \
+			.replace("{cc}",		generator.get("cc",		environ.get("CC", "gcc"))) \
 			.replace("{cflags}",	generator.get("cflags",	"-Wextra -Wall")) \
 			.replace("{makedep}",	generator.get("makedep","")) \
 			.replace("{lib}",		generator.get("lib",	"")) \
