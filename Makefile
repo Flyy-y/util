@@ -6,7 +6,7 @@
 #    By: cbreisch <cbreisch@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/02/27 14:18:33 by cbreisch          #+#    #+#              #
-#    Updated: 2019/02/08 17:40:30 by cbreisch         ###   ########.fr        #
+#    Updated: 2019/02/09 01:03:59 by cbreisch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,6 +27,7 @@ MAKEDEP		:= {makedep}
 LIB			:= {lib}
 INC			:= -I$(INCDIR) {inc}
 LINKER		:= {linker}
+INDEXER		:= {indexer}
 RM			:= {rm}
 MKDIR		:= {mkdir}
 
@@ -61,11 +62,11 @@ DEL_STRING	:= "Deleted"
 #
 $(NAME): all
 
-all: makedep $(TARGETDIR)/$(TARGET)
+all: $(TARGETDIR)/$(TARGET)
 
 re: fclean all
 
-fre: depclean fclean all
+fre: depfclean fclean all
 
 clean: #Delete build directory
 	@$(RM) $(OBJECTS) $(BUILDDIR) 2> /dev/null | true
@@ -79,7 +80,7 @@ depclean:
 	@$(foreach dep,$(MAKEDEP),make -C $(dep) clean;)
 
 depfclean:
-	@$(foreach dep,$(MAKEDEP),make -C $(dep) clean;)
+	@$(foreach dep,$(MAKEDEP),make -C $(dep) fclean;)
 
 norm:
 	@norminette $(SOURCES) $(INCDIR)/*.h
@@ -98,7 +99,7 @@ makedep:
 #	LINKING
 #
 ifeq ($(LIBRARY), FALSE)
-$(TARGETDIR)/$(TARGET): $(OBJECTS)
+$(TARGETDIR)/$(TARGET): makedep $(OBJECTS)
 	@$(MKDIR) $(dir $@)
 	@$(CC) $(CFLAGS) $(INC) -o $(TARGETDIR)/$(TARGET) $^ $(LIB) 2> $@.log; \
 		RESULT=$$?; \
@@ -127,6 +128,18 @@ $(TARGETDIR)/$(TARGET): $(OBJECTS)
 		cat $@.log; \
 		rm -f $@.log; \
 		exit $$RESULT
+	@$(INDEXER) $(TARGETDIR)/$(TARGET) 2> $@.log; \
+		RESULT=$$?; \
+		if [ $$RESULT -ne 0 ]; then \
+			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(IND_STRING)$(TAR_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
+		elif [ -s $@.log ]; then \
+			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(IND_STRING)$(TAR_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
+		else  \
+			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(IND_STRING)$(TAR_COLOR) $@" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
+		fi; \
+		cat $@.log; \
+		rm -f $@.log; \
+		exit $$RESULT
 endif
 
 
@@ -150,18 +163,8 @@ $(BUILDDIR)/%.$(OBJEXT): $(SRCDIR)/%.$(SRCEXT)
 		cat $@.log; \
 		rm -f $@.log; \
 		exit $$RESULT
-	
 
-
-
-
-nicemoulinette:
-	@(read -p "Are you sure ? [y/N]: " sure && case "$$sure" in [yY]) true;; *) false;; esac)
-	@mv $(SOURCES) .
-	@mv $(shell du -a $(INCDIR) | awk '{print $$2}' | grep '\.h') .
-	@$(RM) $(SRCDIR) | true
-	@$(RM) $(INCDIR) | true
 
 #Non-File Targets
-.PHONY: all re fre directories clean fclean depclean depfclean norm normcheck makedep nicemoulinette
+.PHONY: all re fre directories clean fclean depclean depfclean norm normcheck makedep
 

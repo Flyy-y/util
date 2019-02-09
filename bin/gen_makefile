@@ -30,6 +30,7 @@ with open(selfdir + example, 'r') as makefile_file:
 			.replace("{lib}",		generator.get("lib",	"")) \
 			.replace("{inc}",		generator.get("inc",	"")) \
 			.replace("{linker}",	generator.get("linker",	"ar -rcs")) \
+			.replace("{indexer}",	generator.get("indexer","ranlib")) \
 			.replace("{rm}",		generator.get("rm",		"rm -rf")) \
 			.replace("{mkdir}",		generator.get("mkdir","mkdir -p"))
 		makefile = makefile.replace("{sources}", " \\\n".join([os.path.join(dp, f) for dp, dn, filenames in os.walk(generator.get("srcdir",	os.environ.get("SRCDIR", "src"))) for f in filenames if os.path.splitext(f)[1] == "." + generator.get("srcext", "c")]))
