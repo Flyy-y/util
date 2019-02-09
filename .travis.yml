@@ -1,0 +1,14 @@
+language: python
+
+install:
+  - cd test
+  - make regen
+
+script:
+  - make all
+  - make re
+  - make depre
+  - make clean
+  - make fclean
+  - make depfclean
+  - make regen
