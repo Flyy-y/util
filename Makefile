@@ -6,7 +6,7 @@
 #    By: cbreisch <cbreisch@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/02/27 14:18:33 by cbreisch          #+#    #+#              #
-#    Updated: 2019/02/09 03:56:11 by cbreisch         ###   ########.fr        #
+#    Updated: 2019/02/09 04:04:38 by cbreisch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -125,7 +125,7 @@ $(TARGETDIR)/$(TARGET): $(OBJECTS)
 		rm -f $@.log; \
 		exit $$RESULT
 else
-$(TARGETDIR)/$(TARGET): $(OBJECTS) $(MAKEDEP)
+$(TARGETDIR)/$(TARGET): $(OBJECTS)
 	@$(MKDIR) $(dir $@)
 	@$(LINKER) $(TARGETDIR)/$(TARGET) $^ 2> $@.log; \
 		RESULT=$$?; \
