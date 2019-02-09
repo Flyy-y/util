@@ -6,7 +6,7 @@
 #    By: cbreisch <cbreisch@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/02/27 14:18:33 by cbreisch          #+#    #+#              #
-#    Updated: 2019/02/09 04:04:38 by cbreisch         ###   ########.fr        #
+#    Updated: 2019/02/09 04:10:21 by cbreisch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -93,7 +93,7 @@ fclean: clean #Delete build and target directories
 
 depfclean: fclean
 	@for dir in $(MAKEDEP); do \
-		$(MAKE) --no-print-directory -C $$dir fclean DEP_LEVEL=$$(($(DEP_LEVEL)+2)); \
+		$(MAKE) --no-print-directory -C $$dir depfclean DEP_LEVEL=$$(($(DEP_LEVEL)+2)); \
 	done
 
 norm:
