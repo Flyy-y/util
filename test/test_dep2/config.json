@@ -1,0 +1,4 @@
+{
+	"name": "test_dep2",
+	"makedep": "test_dep3"
+}

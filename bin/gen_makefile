@@ -7,7 +7,7 @@ import sys
 from multiprocessing import cpu_count
 
 selfdir = os.path.dirname(os.path.realpath(__file__))
-example = "/../Makefile"
+example = "/../Makefile_example"
 
 try:
 	subprocess.check_output(["ccache", "-V"])
@@ -16,7 +16,6 @@ except:
     ccache = False
 
 with open(selfdir + example, 'r') as makefile_file:
-	
 	makefile = makefile_file.read()
 	with open(sys.argv[1]) as generator_file:
 		generator = load(generator_file)
@@ -26,7 +25,7 @@ with open(selfdir + example, 'r') as makefile_file:
 			makefile = makefile.replace("{mflags}", "j1")
 		makefile = makefile \
 			.replace("{name}",		generator.get("name",	generator.get("target",	"UNDEFINED"))) \
-			.replace("{target}",	generator.get("target",	os.environ.get("TARGET", "UNDEFINED"))) \
+			.replace("{target}",	generator.get("target",	generator.get("name",	"UNDEFINED"))) \
 			.replace("{library}",	"TRUE" if generator.get("library", False) else "FALSE") \
 			.replace("{srcdir}",	generator.get("srcdir",	os.environ.get("SRCDIR", "src"))) \
 			.replace("{incdir}",	generator.get("incdir",	os.environ.get("INCDIR", "includes"))) \
@@ -47,7 +46,7 @@ with open(selfdir + example, 'r') as makefile_file:
 			.replace("{genconfig}",	sys.argv[1]) \
 			.replace("{parallel}",	generator.get("parallel","TRUE" if generator.get("parallel", True) else "FALSE")) \
 			.replace("{cpus}",		str(cpu_count()))
-		if ccache:
+		if generator.get("cache", False) and ccache:
 			makefile = makefile \
 				.replace("{cc}",	"ccache " + generator.get("cc",	os.environ.get("CC", "gcc").replace("ccache", "")).strip()) \
 				.replace("{cxx}",	("ccache " + generator.get("cxx",os.environ.get("CXX", "g++").replace("ccache", "")).strip()))
