@@ -4,20 +4,24 @@ from subprocess import check_output
 import os
 from json import load
 import sys
+from multiprocessing import cpu_count
 
 selfdir = os.path.dirname(os.path.realpath(__file__))
 example = "/../Makefile"
-git = check_output(["git", "pull"], cwd=selfdir)
 
 with open(selfdir + example, 'r') as makefile_file:
 	
 	makefile = makefile_file.read()
 	with open(sys.argv[1]) as generator_file:
 		generator = load(generator_file)
+		if (generator.get("parallel", True)):
+			makefile = makefile.replace("{mflags}", "j$(CPUS)")
+		else:
+			makefile = makefile.replace("{mflags}", "j1")
 		makefile = makefile \
 			.replace("{name}",		generator.get("name",	generator.get("target",	"UNDEFINED"))) \
 			.replace("{target}",	generator.get("target",	os.environ.get("TARGET", "UNDEFINED"))) \
-			.replace("{library}",	"TRUE" if generator.get("library","FALSE") else "FALSE") \
+			.replace("{library}",	"TRUE" if generator.get("library", False) else "FALSE") \
 			.replace("{srcdir}",	generator.get("srcdir",	os.environ.get("SRCDIR", "src"))) \
 			.replace("{incdir}",	generator.get("incdir",	os.environ.get("INCDIR", "includes"))) \
 			.replace("{builddir}",	generator.get("builddir", os.environ.get("BUILDDIR", "build"))) \
@@ -32,7 +36,9 @@ with open(selfdir + example, 'r') as makefile_file:
 			.replace("{linker}",	generator.get("linker",	"ar -rcs")) \
 			.replace("{indexer}",	generator.get("indexer","ranlib")) \
 			.replace("{rm}",		generator.get("rm",		"rm -rf")) \
-			.replace("{mkdir}",		generator.get("mkdir","mkdir -p"))
-		makefile = makefile.replace("{sources}", " \\\n".join([os.path.join(dp, f) for dp, dn, filenames in os.walk(generator.get("srcdir",	os.environ.get("SRCDIR", "src"))) for f in filenames if os.path.splitext(f)[1] == "." + generator.get("srcext", "c")]))
+			.replace("{mkdir}",		generator.get("mkdir","mkdir -p")) \
+			.replace("{parallel}",	generator.get("parallel","TRUE" if generator.get("parallel", True) else "FALSE")) \
+			.replace("{cpus}",		str(cpu_count()))
+		makefile = makefile.replace("{sources}", " \\\n\t".join([os.path.join(dp, f) for dp, dn, filenames in os.walk(generator.get("srcdir",	os.environ.get("SRCDIR", "src"))) for f in filenames if os.path.splitext(f)[1] == "." + generator.get("srcext", "c")]))
 		print(makefile)
 		print("Done !", file=sys.stderr)

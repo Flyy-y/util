@@ -6,9 +6,12 @@
 #    By: cbreisch <cbreisch@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/02/27 14:18:33 by cbreisch          #+#    #+#              #
-#    Updated: 2019/02/09 01:03:59 by cbreisch         ###   ########.fr        #
+#    Updated: 2019/02/09 03:56:11 by cbreisch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
+
+CPUS		:= {cpus}
+MAKEFLAGS	:= {mflags}
 
 NAME		:= {name}
 TARGET		:= {target}
@@ -32,7 +35,6 @@ RM			:= {rm}
 MKDIR		:= {mkdir}
 
 SOURCES     := {sources}
-
 OBJECTS     := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.$(OBJEXT)))
 
 CUR_COLOR	:= \033[0;93m
@@ -44,7 +46,6 @@ ERROR_COLOR	:= \033[0;31m
 WARN_COLOR	:= \033[0;33m
 NO_COLOR	:= \033[m
 
-PRINTF 		:= printf "%-20b%-55b%b"
 OK_STRING	:= "[OK]"
 ERROR_STRING:= "[ERROR]"
 WARN_STRING	:= "[WARNING]"
@@ -52,35 +53,48 @@ COM_STRING	:= "Compiling"
 LIN_STRING	:= "Linking"
 IND_STRING	:= "Indexing"
 DEL_STRING	:= "Deleted"
+DEP_STRING	:= "Making"
 
+ifeq ($(strip $(DEP_LEVEL)),)
+	DEP_LEVEL = 0
+endif
 
+DEP_LEVEL_STR = $(shell awk 'BEGIN {while (c++<$(DEP_LEVEL)) printf " "}')
+
+PRINTF 		:= printf "%-16b%-55b%b" "$(CUR_COLOR)$(DEP_LEVEL_STR)$(NAME)"
 
 
 
 #
-#	RULES
+#	Rules
 #
+#Non-File Targets
+.PHONY: $(NAME) all re depre clean fclean depfclean norm normcheck depfclean
+
 $(NAME): all
 
-all: $(TARGETDIR)/$(TARGET)
+all: | $(MAKEDEP) $(OBJECTS)
+	@$(MAKE) $(TARGETDIR)/$(TARGET) --no-print-directory
 
-re: fclean all
+re:
+	@$(MAKE) fclean --no-print-directory
+	@$(MAKE) all --no-print-directory
 
-fre: depfclean fclean all
+depre: depfclean
+	@$(MAKE) re --no-print-directory
 
 clean: #Delete build directory
 	@$(RM) $(OBJECTS) $(BUILDDIR) 2> /dev/null | true
-	@$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(DEL_STRING)$(TAR_COLOR) build files" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n";
+	@$(PRINTF) "$(COM_COLOR)$(DEL_STRING)$(TAR_COLOR) build files" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n";
 
 fclean: clean #Delete build and target directories
 	@$(RM) $(TARGETDIR)/$(TARGET) $(TARGETDIR)/$(TARGET).dSYM $(TARGETDIR) 2> /dev/null | true
-	@$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(DEL_STRING)$(TAR_COLOR) binary files" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n";
+	@$(PRINTF) "$(COM_COLOR)$(DEL_STRING)$(TAR_COLOR) binary files" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n";
 
-depclean:
-	@$(foreach dep,$(MAKEDEP),make -C $(dep) clean;)
-
-depfclean:
-	@$(foreach dep,$(MAKEDEP),make -C $(dep) fclean;)
+depfclean: fclean
+	@for dir in $(MAKEDEP); do \
+		$(MAKE) --no-print-directory -C $$dir fclean DEP_LEVEL=$$(($(DEP_LEVEL)+2)); \
+	done
 
 norm:
 	@norminette $(SOURCES) $(INCDIR)/*.h
@@ -88,42 +102,39 @@ norm:
 normcheck:
 	@echo "$(shell norminette $(SOURCES) $(INCDIR)/*.h | grep -E '^(Error|Warning)')" Norme check OK
 
-makedep:
-	@$(foreach dep,$(MAKEDEP),make -C $(dep);)
-
-
 
 
 
 #
 #	LINKING
 #
+.PHONY: $(MAKEDEP)
 ifeq ($(LIBRARY), FALSE)
-$(TARGETDIR)/$(TARGET): makedep $(OBJECTS)
+$(TARGETDIR)/$(TARGET): $(OBJECTS)
 	@$(MKDIR) $(dir $@)
 	@$(CC) $(CFLAGS) $(INC) -o $(TARGETDIR)/$(TARGET) $^ $(LIB) 2> $@.log; \
 		RESULT=$$?; \
 		if [ $$RESULT -ne 0 ]; then \
-			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
 		elif [ -s $@.log ]; then \
-			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
 		else  \
-			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
 		fi; \
 		cat $@.log; \
 		rm -f $@.log; \
 		exit $$RESULT
 else
-$(TARGETDIR)/$(TARGET): $(OBJECTS)
+$(TARGETDIR)/$(TARGET): $(OBJECTS) $(MAKEDEP)
 	@$(MKDIR) $(dir $@)
 	@$(LINKER) $(TARGETDIR)/$(TARGET) $^ 2> $@.log; \
 		RESULT=$$?; \
 		if [ $$RESULT -ne 0 ]; then \
-			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
 		elif [ -s $@.log ]; then \
-			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
 		else  \
-			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(COM_COLOR)$(LIN_STRING)$(TAR_COLOR) $@" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
 		fi; \
 		cat $@.log; \
 		rm -f $@.log; \
@@ -131,11 +142,11 @@ $(TARGETDIR)/$(TARGET): $(OBJECTS)
 	@$(INDEXER) $(TARGETDIR)/$(TARGET) 2> $@.log; \
 		RESULT=$$?; \
 		if [ $$RESULT -ne 0 ]; then \
-			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(IND_STRING)$(TAR_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(COM_COLOR)$(IND_STRING)$(TAR_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
 		elif [ -s $@.log ]; then \
-			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(IND_STRING)$(TAR_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(COM_COLOR)$(IND_STRING)$(TAR_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
 		else  \
-			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(IND_STRING)$(TAR_COLOR) $@" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(COM_COLOR)$(IND_STRING)$(TAR_COLOR) $@" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
 		fi; \
 		cat $@.log; \
 		rm -f $@.log; \
@@ -154,17 +165,27 @@ $(BUILDDIR)/%.$(OBJEXT): $(SRCDIR)/%.$(SRCEXT)
 	@$(CC) $(CFLAGS) $(INC) -c -o $@ $< 2> $@.log; \
 		RESULT=$$?; \
 		if [ $$RESULT -ne 0 ]; then \
-			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
 		elif [ -s $@.log ]; then \
-			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
 		else  \
-			$(PRINTF) "$(CUR_COLOR)$(NAME) > " "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $(@F)" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
+			$(PRINTF) "$(COM_COLOR)$(COM_STRING)$(OBJ_COLOR) $(@F)" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
 		fi; \
 		cat $@.log; \
 		rm -f $@.log; \
 		exit $$RESULT
 
 
-#Non-File Targets
-.PHONY: all re fre directories clean fclean depclean depfclean norm normcheck makedep
+
+$(MAKEDEP):
+	@$(MAKE) -s -C $@ DEP_LEVEL=$$(($(DEP_LEVEL)+2)) 2> $@.log; \
+	RESULT=$$?; \
+	if [ $$RESULT -ne 0 ]; then \
+		$(PRINTF) "$(COM_COLOR)$(DEP_STRING)$(OBJ_COLOR) $@" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
+	elif [ -s $@.log ]; then \
+		$(PRINTF) "$(COM_COLOR)$(DEP_STRING)$(OBJ_COLOR) $@" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
+	fi; \
+	cat $@.log; \
+	rm -f $@.log; \
+	exit $$RESULT
 
