@@ -1,10 +1,13 @@
 language: python
 
 install:
-  - cd test
-  - make regen
+  - cd test/gen_makefile && ../../bin/gen_makefile config.json > Makefile
+  - cd test_dep1 && ../../../bin/gen_makefile config.json > Makefile
+  - cd ../test_dep2 && ../../../bin/gen_makefile config.json > Makefile
+  - cd test_dep3 && ../../../../bin/gen_makefile config.json > Makefile
 
 script:
+  - cd "$TRAVIS_BUILD_DIR"/test/gen_makefile
   - make all
   - make re
   - make depre
@@ -12,3 +15,4 @@ script:
   - make fclean
   - make depfclean
   - make regen
+  - make depre
