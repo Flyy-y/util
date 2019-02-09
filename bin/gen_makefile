@@ -9,6 +9,13 @@ from multiprocessing import cpu_count
 selfdir = os.path.dirname(os.path.realpath(__file__))
 example = "/../Makefile_example"
 
+if os.environ.get("CONTINUOUS_INTEGRATION", "false").lower() == "false":
+	try:
+		subprocess.check_output([selfdir + "/../check_build_status.sh"])
+	except:
+		print("Makefile CI Tests are failing, not modifying current files", file=sys.stderr)
+		exit (1)
+
 try:
 	subprocess.check_output(["ccache", "-V"])
 	ccache = True
