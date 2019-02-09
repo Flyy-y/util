@@ -1,14 +1,11 @@
 language: python
 
-configure:
+install:
+  - make --version && python --version
   - cd tests/gen_makefile && ../../bin/gen_makefile config.json > Makefile
   - cd test_dep1 && ../../../bin/gen_makefile config.json > Makefile
   - cd ../test_dep2 && ../../../bin/gen_makefile config.json > Makefile
   - cd test_dep3 && ../../../../bin/gen_makefile config.json > Makefile
-
-announce: make --version && python --version
-
-install:
   - cd "$TRAVIS_BUILD_DIR"/tests/gen_makefile
   - make all
   - make re
