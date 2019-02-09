@@ -6,7 +6,7 @@
 #    By: cbreisch <cbreisch@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/02/27 14:18:33 by cbreisch          #+#    #+#              #
-#    Updated: 2019/02/09 04:10:21 by cbreisch         ###   ########.fr        #
+#    Updated: 2019/02/09 05:09:24 by cbreisch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,6 +34,9 @@ INDEXER		:= {indexer}
 RM			:= {rm}
 MKDIR		:= {mkdir}
 
+GENERATOR	:= {generator}
+GENCONFIG	:= {genconfig}
+
 SOURCES     := {sources}
 OBJECTS     := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.$(OBJEXT)))
 
@@ -54,14 +57,12 @@ LIN_STRING	:= "Linking"
 IND_STRING	:= "Indexing"
 DEL_STRING	:= "Deleted"
 DEP_STRING	:= "Making"
-
+REG_STRING	:= "Regenerating_Makefile"
 ifeq ($(strip $(DEP_LEVEL)),)
 	DEP_LEVEL = 0
 endif
-
 DEP_LEVEL_STR = $(shell awk 'BEGIN {while (c++<$(DEP_LEVEL)) printf " "}')
-
-PRINTF 		:= printf "%-16b%-55b%b" "$(CUR_COLOR)$(DEP_LEVEL_STR)$(NAME)"
+PRINTF 		:= printf "%-22b%-55b%b" "$(CUR_COLOR)$(DEP_LEVEL_STR)$(NAME) "
 
 
 
@@ -101,6 +102,24 @@ norm:
 
 normcheck:
 	@echo "$(shell norminette $(SOURCES) $(INCDIR)/*.h | grep -E '^(Error|Warning)')" Norme check OK
+
+regen:
+	@$(GENERATOR) $(GENCONFIG) > Makefile.regen 2> regen.log; \
+		RESULT=$$?; \
+		if [ $$RESULT -ne 0 ]; then \
+			$(PRINTF) "$(COM_COLOR)$(REG_STRING)$(OBJ_COLOR)" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
+		elif [ -s regen.log ]; then \
+			$(PRINTF) "$(COM_COLOR)$(REG_STRING)$(OBJ_COLOR)" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
+		else  \
+			$(PRINTF) "$(COM_COLOR)$(REG_STRING)$(OBJ_COLOR)" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
+			mv -f Makefile.regen Makefile 2> /dev/null; \
+		fi; \
+		cat regen.log; \
+		rm -f regen.log; \
+		exit $$RESULT
+	@for dir in $(MAKEDEP); do \
+		$(MAKE) --no-print-directory -C $$dir regen DEP_LEVEL=$$(($(DEP_LEVEL)+2)); \
+	done
 
 
 

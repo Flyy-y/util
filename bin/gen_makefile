@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from subprocess import check_output
+import subprocess
 import os
 from json import load
 import sys
@@ -8,6 +8,12 @@ from multiprocessing import cpu_count
 
 selfdir = os.path.dirname(os.path.realpath(__file__))
 example = "/../Makefile"
+
+try:
+	subprocess.check_output(["ccache", "-V"])
+	ccache = True
+except:                                                                                                   
+    ccache = False
 
 with open(selfdir + example, 'r') as makefile_file:
 	
@@ -28,8 +34,8 @@ with open(selfdir + example, 'r') as makefile_file:
 			.replace("{tardir}",	generator.get("tardir",	os.environ.get("TARDIR", "bin"))) \
 			.replace("{srcext}",	generator.get("srcext",	"c")) \
 			.replace("{objext}",	generator.get("objext",	"o")) \
-			.replace("{cc}",		generator.get("cc",		os.environ.get("CC", "gcc"))) \
-			.replace("{cflags}",	generator.get("cflags",	os.environ.get("CC", "-Wextra -Wall"))) \
+			.replace("{cflags}",	generator.get("cflags",	os.environ.get("CFLAGS", "-Wextra -Wall"))) \
+			.replace("{cxxflags}",	generator.get("cxxflags",	os.environ.get("CXXFLAGS", "-Wextra -Wall"))) \
 			.replace("{makedep}",	generator.get("makedep","")) \
 			.replace("{lib}",		generator.get("lib",	"")) \
 			.replace("{inc}",		generator.get("inc",	"")) \
@@ -37,8 +43,15 @@ with open(selfdir + example, 'r') as makefile_file:
 			.replace("{indexer}",	generator.get("indexer","ranlib")) \
 			.replace("{rm}",		generator.get("rm",		"rm -rf")) \
 			.replace("{mkdir}",		generator.get("mkdir","mkdir -p")) \
+			.replace("{generator}", sys.argv[0]) \
+			.replace("{genconfig}",	sys.argv[1]) \
 			.replace("{parallel}",	generator.get("parallel","TRUE" if generator.get("parallel", True) else "FALSE")) \
 			.replace("{cpus}",		str(cpu_count()))
+		if ccache:
+			makefile = makefile \
+				.replace("{cc}",	"ccache " + generator.get("cc",	os.environ.get("CC", "gcc").replace("ccache", "")).strip()) \
+				.replace("{cxx}",	("ccache " + generator.get("cxx",os.environ.get("CXX", "g++").replace("ccache", "")).strip()))
+		else:
+			makefile = makefile.replace("{cc}",		generator.get("cc",		os.environ.get("CC", "gcc")))
 		makefile = makefile.replace("{sources}", " \\\n\t".join([os.path.join(dp, f) for dp, dn, filenames in os.walk(generator.get("srcdir",	os.environ.get("SRCDIR", "src"))) for f in filenames if os.path.splitext(f)[1] == "." + generator.get("srcext", "c")]))
 		print(makefile)
-		print("Done !", file=sys.stderr)
