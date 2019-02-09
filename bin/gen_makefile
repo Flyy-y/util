@@ -24,7 +24,7 @@ except:
 
 with open(selfdir + example, 'r') as makefile_file:
 	makefile = makefile_file.read()
-	with open(sys.argv[1]) as generator_file:
+	with open(sys.argv[1], "r") as generator_file:
 		generator = load(generator_file)
 		if (generator.get("parallel", True)):
 			makefile = makefile.replace("{mflags}", "j$(CPUS)")
@@ -60,4 +60,8 @@ with open(selfdir + example, 'r') as makefile_file:
 		else:
 			makefile = makefile.replace("{cc}",		generator.get("cc",		os.environ.get("CC", "gcc")))
 		makefile = makefile.replace("{sources}", " \\\n\t".join([os.path.join(dp, f) for dp, dn, filenames in os.walk(generator.get("srcdir",	os.environ.get("SRCDIR", "src"))) for f in filenames if os.path.splitext(f)[1] == "." + generator.get("srcext", "c")]))
-		print(makefile)
+		if len(sys.argv) == 3:
+			with open(sys.argv[2], "w") as output:
+				print(makefile, file=output)
+		else:
+			print(makefile)

@@ -1,12 +1,12 @@
 # **************************************************************************** #
 #                                                                              #
 #                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
+#    Makefile_example                                   :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
 #    By: cbreisch <cbreisch@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/02/27 14:18:33 by cbreisch          #+#    #+#              #
-#    Updated: 2019/02/09 05:09:24 by cbreisch         ###   ########.fr        #
+#    Updated: 2019/02/09 14:38:46 by cbreisch         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -104,7 +104,7 @@ normcheck:
 	@echo "$(shell norminette $(SOURCES) $(INCDIR)/*.h | grep -E '^(Error|Warning)')" Norme check OK
 
 regen:
-	@$(GENERATOR) $(GENCONFIG) > Makefile.regen 2> regen.log; \
+	@$(GENERATOR) $(GENCONFIG) Makefile 2> regen.log; \
 		RESULT=$$?; \
 		if [ $$RESULT -ne 0 ]; then \
 			$(PRINTF) "$(COM_COLOR)$(REG_STRING)$(OBJ_COLOR)" "$(ERROR_COLOR)$(ERROR_STRING)$(NO_COLOR)\n"; \
@@ -112,7 +112,6 @@ regen:
 			$(PRINTF) "$(COM_COLOR)$(REG_STRING)$(OBJ_COLOR)" "$(WARN_COLOR)$(WARN_STRING)$(NO_COLOR)\n"; \
 		else  \
 			$(PRINTF) "$(COM_COLOR)$(REG_STRING)$(OBJ_COLOR)" "$(OK_COLOR)$(OK_STRING)$(NO_COLOR)\n"; \
-			mv -f Makefile.regen Makefile 2> /dev/null; \
 		fi; \
 		cat regen.log; \
 		rm -f regen.log; \
